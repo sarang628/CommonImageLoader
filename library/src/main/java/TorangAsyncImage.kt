@@ -52,6 +52,7 @@ fun TorangAsyncImage(
                     .crossfade(true)
                     .build(),
                 contentDescription = "",
+                contentScale = ContentScale.FillBounds,
                 modifier = Modifier
                     .size(50.dp)
                     .rotate(rotate.value),
@@ -94,10 +95,9 @@ fun TorangAsyncImage(
 @Composable
 private fun PreviewTorangAsyncImage() {
     TorangAsyncImage(
-//        url = "http://sarang628.iptime.org:89/restaurants/1-1.jpeg",
-        url = "",
+        url = "http://sarang628.iptime.org:89/restaurants/1-1.jpeg",
+//        url = "",
         Modifier
-            .fillMaxWidth()
-            .fillMaxHeight()
+            .size(450.dp)
     )
 }
