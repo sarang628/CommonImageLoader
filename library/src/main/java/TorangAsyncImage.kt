@@ -25,7 +25,9 @@ import kotlinx.coroutines.delay
 @Composable
 fun TorangAsyncImage(
     url: String,
-    modifier: Modifier
+    modifier: Modifier,
+    progressSize: Dp = 50.dp,
+    errorIconSize: Dp = 50.dp
 ) {
     val loadingDelay = 2000
     val rotate = remember { mutableStateOf(10f) }
@@ -45,6 +47,7 @@ fun TorangAsyncImage(
         modifier = modifier,
         contentAlignment = Alignment.Center
     ) {
+        // in progress loading image
         if (state.value == 0) {
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
@@ -54,12 +57,16 @@ fun TorangAsyncImage(
                 contentDescription = "",
                 contentScale = ContentScale.FillBounds,
                 modifier = Modifier
-                    .size(50.dp)
+                    .size(progressSize)
                     .rotate(rotate.value),
             )
-        } else if (state.value == 1) {
+        }
+        // if image loading correct
+        else if (state.value == 1) {
 
-        } else if (state.value == 2) {
+        }
+        // if image cannot loading
+        else if (state.value == 2) {
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(R.drawable.ic_connection_error)
@@ -67,7 +74,7 @@ fun TorangAsyncImage(
                     .build(),
                 contentDescription = "",
                 modifier = Modifier
-                    .size(50.dp)
+                    .size(errorIconSize)
             )
         }
         if (triggerLoading.value) {
@@ -77,10 +84,10 @@ fun TorangAsyncImage(
                     .crossfade(true)
                     .build(),
                 onSuccess = {
-                    state.value = 1
+                    state.value = 1 // success
                 },
                 onError = {
-                    state.value = 2
+                    state.value = 2 // failed
                 },
                 contentDescription = "",
                 contentScale = ContentScale.Crop,
@@ -95,9 +102,10 @@ fun TorangAsyncImage(
 @Composable
 private fun PreviewTorangAsyncImage() {
     TorangAsyncImage(
-        url = "http://sarang628.iptime.org:89/restaurants/1-1.jpeg",
-//        url = "",
-        Modifier
-            .size(450.dp)
+//        url = "http://sarang628.iptime.org:89/restaurants/1-1.jpeg",
+        url = "",
+        Modifier.size(450.dp),
+        progressSize = 30.dp,
+        errorIconSize = 30.dp
     )
 }
