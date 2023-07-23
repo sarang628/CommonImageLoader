@@ -24,7 +24,7 @@ import kotlinx.coroutines.delay
 
 @Composable
 fun TorangAsyncImage(
-    url: String,
+    model: Any?,
     modifier: Modifier,
     progressSize: Dp = 50.dp,
     errorIconSize: Dp = 50.dp
@@ -80,7 +80,7 @@ fun TorangAsyncImage(
         if (triggerLoading.value) {
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
-                    .data(url)
+                    .data(model)
                     .crossfade(true)
                     .build(),
                 onSuccess = {
@@ -102,8 +102,9 @@ fun TorangAsyncImage(
 @Composable
 private fun PreviewTorangAsyncImage() {
     TorangAsyncImage(
-//        url = "http://sarang628.iptime.org:89/restaurants/1-1.jpeg",
-        url = "",
+//        model = "http://sarang628.iptime.org:89/restaurants/1-1.jpeg",
+//        model = "",
+        model = R.drawable.loading_img,
         Modifier.size(450.dp),
         progressSize = 30.dp,
         errorIconSize = 30.dp
