@@ -33,14 +33,13 @@ fun TorangAsyncImage(
     val rotate = remember { mutableStateOf(10f) }
     val state = remember { mutableStateOf(0) }
     val current = remember { mutableStateOf(System.currentTimeMillis()) }
-    val triggerLoading = remember { mutableStateOf(false) }
+    val triggerLoading = remember { mutableStateOf(true) }
 
     LaunchedEffect(key1 = "1", block = {
         while (loadingDelay > System.currentTimeMillis() - current.value) {
             delay(100)
             rotate.value = rotate.value + 30f
         }
-        triggerLoading.value = true
     })
 
     Box(
@@ -102,9 +101,9 @@ fun TorangAsyncImage(
 @Composable
 private fun PreviewTorangAsyncImage() {
     TorangAsyncImage(
-//        model = "http://sarang628.iptime.org:89/restaurants/1-1.jpeg",
+        model = "http://sarang628.iptime.org:89/restaurants/1-1.jpeg",
 //        model = "",
-        model = R.drawable.loading_img,
+//        model = R.drawable.loading_img,
         Modifier.size(450.dp),
         progressSize = 30.dp,
         errorIconSize = 30.dp
