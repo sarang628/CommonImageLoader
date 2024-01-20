@@ -52,7 +52,9 @@ fun TorangAsyncImage(
                         painter =
                         painterResource(id = previewPlaceHolder ?: R.drawable.ic_loading),
                         contentDescription = "",
-                        modifier = Modifier.align(Alignment.Center)
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .size(progressSize)
                     )
                 } else if (state == 0) {
                     CircularProgressIndicator(
@@ -89,25 +91,26 @@ fun TorangAsyncImage(
         }
 
 
-        AsyncImage(
-            model = ImageRequest.Builder(LocalContext.current)
-                .data(model)
-                .size(1)
-                .build(),
-            onSuccess = {
-                coroutine.launch {
-                    //delay(2000)
-                    state = 1 // success
-                }
-            },
-            onError = {
-                coroutine.launch {
-                    //delay(2000)
-                    state = 2 // failed
-                }
-            },
-            contentDescription = ""
-        )
+        if (state == 0) {
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(model)
+                    .build(),
+                onSuccess = {
+                    coroutine.launch {
+                        //delay(2000)
+                        state = 1 // success
+                    }
+                },
+                onError = {
+                    coroutine.launch {
+                        //delay(2000)
+                        state = 2 // failed
+                    }
+                },
+                contentDescription = ""
+            )
+        }
     }
 
 }
