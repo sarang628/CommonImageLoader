@@ -1,5 +1,6 @@
 package com.sryang.commonimageloader
 
+import TorangAsyncImage
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -22,6 +23,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
+                    TorangAsyncImage(model = "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Instagram_icon.png/600px-Instagram_icon.png", modifier = Modifier)
                     Greeting("Android")
                 }
             }
@@ -41,6 +43,7 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
 @Composable
 fun GreetingPreview() {
     CommonImageLoaderTheme {
+        TorangAsyncImage(model = "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Instagram_icon.png/600px-Instagram_icon.png", modifier = Modifier)
         Greeting("Android")
     }
 }
