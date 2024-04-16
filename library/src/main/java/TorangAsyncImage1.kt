@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -26,11 +25,10 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.sryang.library.R
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @Composable
-fun TorangAsyncImage(
+fun TorangAsyncImage1(
     model: Any?,
     modifier: Modifier,
     progressSize: Dp = 50.dp,
@@ -39,13 +37,23 @@ fun TorangAsyncImage(
 ) {
     var state by remember { mutableStateOf(0) }
     val coroutine = rememberCoroutineScope()
-    var visible by remember { mutableStateOf(false) }
 
     Box(
         modifier = modifier,
         contentAlignment = Alignment.Center
     ) {
-        AnimatedVisibility(
+
+        AsyncImage(
+            model = ImageRequest.Builder(LocalContext.current)
+                .data(model)
+                .crossfade(true)
+                .build(),
+            contentDescription = "",
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize()
+        )
+
+        /*AnimatedVisibility(
             visible = true,
             modifier.fillMaxSize()
         ) {
@@ -60,29 +68,23 @@ fun TorangAsyncImage(
                             .size(progressSize)
                     )
                 } else if (state == 0) {
-                    if (!visible)
-                        CircularProgressIndicator(
-                            strokeWidth = 2.dp,
-                            strokeCap = StrokeCap.Round,
-                            color = Color.LightGray,
-                            modifier = Modifier
-                                .align(Alignment.Center)
-                                .size(progressSize)
-                        )
+                    CircularProgressIndicator(
+                        strokeWidth = 2.dp,
+                        strokeCap = StrokeCap.Round,
+                        color = Color.LightGray,
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .size(progressSize)
+                    )
+                } else if (state == 1) {
                     AsyncImage(
-                        modifier = if (!visible) Modifier.size(1.dp) else Modifier.fillMaxSize(),
                         model = ImageRequest.Builder(LocalContext.current)
                             .data(model)
+                            .crossfade(true)
                             .build(),
-                        onSuccess = {
-                            visible = true
-                        },
-                        onError = {
-                            coroutine.launch {
-                                state = 2 // failed
-                            }
-                        },
-                        contentDescription = ""
+                        contentDescription = "",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
                     )
                 } else if (state == 2) {
                     AsyncImage(
@@ -97,7 +99,29 @@ fun TorangAsyncImage(
                     )
                 }
             }
-        }
+        }*/
+
+
+        /*if (state == 0) {
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(model)
+                    .build(),
+                onSuccess = {
+                    coroutine.launch {
+                        //delay(2000)
+                        state = 1 // success
+                    }
+                },
+                onError = {
+                    coroutine.launch {
+                        //delay(2000)
+                        state = 2 // failed
+                    }
+                },
+                contentDescription = ""
+            )
+        }*/
     }
 
 }
