@@ -8,7 +8,7 @@ plugins {
 
 ext {
     // Sdk and tools
-    compileSdk = 33
+    compileSdk = 34
     minSdk = 24
     targetSdk = 30
     buildToolsVersion = '30.0.3'
