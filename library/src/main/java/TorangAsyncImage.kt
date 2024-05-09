@@ -1,11 +1,11 @@
+import android.content.Context
 import androidx.annotation.DrawableRes
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -15,6 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.res.painterResource
@@ -24,7 +25,10 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.sryang.library.R
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.io.File
+
 
 @Composable
 fun TorangAsyncImage(
@@ -32,71 +36,78 @@ fun TorangAsyncImage(
     modifier: Modifier,
     progressSize: Dp = 50.dp,
     errorIconSize: Dp = 50.dp,
+    contentScale: ContentScale = ContentScale.Fit,
     @DrawableRes previewPlaceHolder: Int? = null
 ) {
     var state by remember { mutableStateOf(0) }
     val coroutine = rememberCoroutineScope()
-    var visible by remember { mutableStateOf(false) }
+
+    LaunchedEffect(key1 = model) {
+        state = 0
+    }
 
     Box(
         modifier = modifier,
         contentAlignment = Alignment.Center
     ) {
-        AnimatedVisibility(
+        if (LocalInspectionMode.current) {
+            Image(
+                painter =
+                painterResource(id = previewPlaceHolder ?: R.drawable.ic_loading),
+                contentDescription = "",
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .size(progressSize)
+            )
+        } else if (state == 0 || state == 1) {
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(model)
+                    .build(),
+                onSuccess = {
+                    coroutine.launch {
+                        delay(10)
+                        state = 1 // success
+                    }
+                },
+                onError = {
+                    coroutine.launch {
+                        delay(10)
+                        state = 2 // failed
+                    }
+                },
+                contentScale = contentScale,
+                contentDescription = ""
+            )
+        } else if (state == 2) {
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(R.drawable.ic_connection_error)
+                    .crossfade(true)
+                    .build(),
+                contentDescription = "",
+                modifier = Modifier
+                    .size(errorIconSize)
+                    .align(Alignment.Center)
+            )
+        }
+
+        /*AnimatedVisibility(
             visible = true,
             modifier.fillMaxSize()
-        ) {
-            Box {
-                if (LocalInspectionMode.current) {
-                    Image(
-                        painter =
-                        painterResource(id = previewPlaceHolder ?: R.drawable.ic_loading),
-                        contentDescription = "",
-                        modifier = Modifier
-                            .align(Alignment.Center)
-                            .size(progressSize)
-                    )
-                } else if (state == 0) {
-                    if (!visible)
-                        CircularProgressIndicator(
-                            strokeWidth = 2.dp,
-                            strokeCap = StrokeCap.Round,
-                            color = Color.LightGray,
-                            modifier = Modifier
-                                .align(Alignment.Center)
-                                .size(progressSize)
-                        )
-                    AsyncImage(
-                        modifier = if (!visible) Modifier.size(1.dp) else Modifier.fillMaxSize(),
-                        model = ImageRequest.Builder(LocalContext.current)
-                            .data(model)
-                            .build(),
-                        onSuccess = {
-                            visible = true
-                        },
-                        onError = {
-                            coroutine.launch {
-                                state = 2 // failed
-                            }
-                        },
-                        contentDescription = ""
-                    )
-                } else if (state == 2) {
-                    AsyncImage(
-                        model = ImageRequest.Builder(LocalContext.current)
-                            .data(R.drawable.ic_connection_error)
-                            .crossfade(true)
-                            .build(),
-                        contentDescription = "",
-                        modifier = Modifier
-                            .size(errorIconSize)
-                            .align(Alignment.Center)
-                    )
-                }
-            }
+        ) {*/
+
+        if (state == 0) {
+            CircularProgressIndicator(
+                strokeWidth = 2.dp,
+                strokeCap = StrokeCap.Round,
+                color = Color.LightGray,
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .size(progressSize)
+            )
         }
     }
-
 }
 
 @Preview
@@ -110,4 +121,29 @@ private fun PreviewTorangAsyncImage() {
         progressSize = 30.dp,
         errorIconSize = 30.dp
     )
+}
+
+fun deleteCache(context: Context) {
+    try {
+        val dir = context.cacheDir
+        deleteDir(dir)
+    } catch (e: Exception) {
+    }
+}
+
+fun deleteDir(dir: File?): Boolean {
+    return if (dir != null && dir.isDirectory()) {
+        val children = dir.list()
+        for (i in children.indices) {
+            val success = deleteDir(File(dir, children[i]))
+            if (!success) {
+                return false
+            }
+        }
+        dir.delete()
+    } else if (dir != null && dir.isFile()) {
+        dir.delete()
+    } else {
+        false
+    }
 }

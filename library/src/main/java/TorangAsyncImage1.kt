@@ -33,6 +33,7 @@ fun TorangAsyncImage1(
     modifier: Modifier,
     progressSize: Dp = 50.dp,
     errorIconSize: Dp = 50.dp,
+    contentScale: ContentScale = ContentScale.Fit,
     @DrawableRes previewPlaceHolder: Int? = null
 ) {
     var state by remember { mutableStateOf(0) }
@@ -49,7 +50,7 @@ fun TorangAsyncImage1(
                 .crossfade(true)
                 .build(),
             contentDescription = "",
-            contentScale = ContentScale.Crop,
+            contentScale = contentScale,
             modifier = Modifier.fillMaxSize()
         )
 
