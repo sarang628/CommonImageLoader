@@ -2,9 +2,12 @@ package com.sryang.commonimageloader
 
 import TorangAsyncImage
 import TorangAsyncImage1
+import ZoomableImage
+import ZoomableTorangAsyncImage
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,6 +22,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -26,6 +30,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.sryang.commonimageloader.ui.theme.CommonImageLoaderTheme
 import deleteCache
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -57,43 +62,14 @@ class MainActivity : ComponentActivity() {
                         Button(onClick = { deleteCache(context) }) {
                             Text(text = "cache clear")
                         }
-                        Row {
-                            LazyColumn {
-                                items(10000) {
-                                    TorangAsyncImage(
-                                        model = list[it % list.size],
-                                        modifier = Modifier.size(150.dp),
-                                        contentScale = ContentScale.Crop
-                                    )
-                                }
-                            }
-                            LazyColumn {
-                                items(10000) {
-                                    TorangAsyncImage(
-                                        model = list[it % list.size],
-                                        modifier = Modifier.size(150.dp),
-                                        contentScale = ContentScale.Crop
-                                    )
-                                }
-                            }
-                            LazyColumn {
-                                items(10000) {
-                                    TorangAsyncImage(
-                                        model = list[it % list.size],
-                                        modifier = Modifier.size(150.dp),
-                                        contentScale = ContentScale.Crop
-                                    )
-                                }
-                            }
-                            LazyColumn {
-                                items(10000) {
-                                    TorangAsyncImage(
-                                        model = list[it % list.size],
-                                        modifier = Modifier.size(150.dp),
-                                        contentScale = ContentScale.Crop
-                                    )
-                                }
-                            }
+                        Box(modifier = Modifier.fillMaxSize()) {
+                            ZoomableTorangAsyncImage(
+                                model = list[0],
+                                modifier = Modifier
+                                    .size(400.dp)
+                                    .align(Alignment.Center),
+                                contentScale = ContentScale.Crop
+                            )
                         }
                     }
                 }

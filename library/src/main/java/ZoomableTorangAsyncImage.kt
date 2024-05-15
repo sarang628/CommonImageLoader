@@ -1,0 +1,211 @@
+import ZoomableImageDimens.MAGNIFICATION_BASELINE
+import ZoomableImageDimens.MAGNIFICATION_SCALE_DEFAULT
+import ZoomableImageDimens.MAGNIFICATION_THRESHOLD
+import ZoomableImageDimens.OFFSET_X_BASELINE
+import ZoomableImageDimens.OFFSET_Y_BASELINE
+import ZoomableImageDimens.ROTATION_BASELINE
+import androidx.annotation.DrawableRes
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.MutatePriority
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.gestures.ScrollableState
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.calculatePan
+import androidx.compose.foundation.gestures.calculateRotation
+import androidx.compose.foundation.gestures.calculateZoom
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Box
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.GraphicsLayerScope
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.launch
+
+
+@Composable
+fun ZoomableTorangAsyncImage(
+    model: Any?,
+    modifier: Modifier,
+    progressSize: Dp = 50.dp,
+    errorIconSize: Dp = 50.dp,
+    contentScale: ContentScale = ContentScale.Fit,
+    @DrawableRes previewPlaceHolder: Int? = null,
+) {
+    ZoomableImage(modifier) { modifier ->
+        TorangAsyncImage(
+            model = model,
+            modifier = modifier,
+            contentScale = contentScale,
+            previewPlaceHolder = previewPlaceHolder,
+            errorIconSize = errorIconSize,
+            progressSize = progressSize,
+        )
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun ZoomableImage(
+    modifier: Modifier = Modifier,
+    animateSnapBack: Boolean = true,
+    containerModifier: Modifier = Modifier, //for box
+    magnificationScale: Float = MAGNIFICATION_SCALE_DEFAULT,
+    onZoomModeChanged: ((Boolean) -> Unit)? = null,
+    scrollState: ScrollableState? = null,
+    snapBack: Boolean = false,
+    supportRotation: Boolean = false,
+    compose: @Composable (Modifier) -> Unit,
+) {
+
+    val coroutineScope = rememberCoroutineScope()
+
+    var scale by remember { mutableStateOf(MAGNIFICATION_BASELINE) }
+    var rotation by remember { mutableStateOf(ROTATION_BASELINE) }
+    var offsetX by remember { mutableStateOf(OFFSET_X_BASELINE) }
+    var offsetY by remember { mutableStateOf(OFFSET_Y_BASELINE) }
+
+    // for animating scale, rotation and translation back to its original state
+    var isInGesture by remember { mutableStateOf(false) }
+    val snapBackScale by animateFloatAsState(
+        if (isInGesture) scale else MAGNIFICATION_BASELINE,
+        label = "LABEL_ZOOMABLE_IMG_SNAP_BACK_SCALE"
+    )
+    val snapBackRotation by animateFloatAsState(
+        if (isInGesture) rotation else ROTATION_BASELINE,
+        label = "LABEL_ZOOMABLE_IMG_SNAP_BACK_ROTATION"
+    )
+    val snapBackOffsetX by animateFloatAsState(
+        if (isInGesture) offsetX else OFFSET_X_BASELINE,
+        label = "LABEL_ZOOMABLE_IMG_SNAP_BACK_OFFSET_X"
+    )
+    val snapBackOffsetY by animateFloatAsState(
+        if (isInGesture) offsetY else OFFSET_Y_BASELINE,
+        label = "LABEL_ZOOMABLE_IMG_SNAP_BACK_OFFSET_Y"
+    )
+
+    Box(
+        modifier = containerModifier
+            .combinedClickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = { },
+                onDoubleClick = {
+                    if (scale >= MAGNIFICATION_THRESHOLD) {
+                        onZoomModeChanged?.invoke(false)
+                        scale = MAGNIFICATION_BASELINE
+                        offsetX = OFFSET_X_BASELINE
+                        offsetY = OFFSET_Y_BASELINE
+                    } else {
+                        scale = magnificationScale
+                    }
+                },
+            )
+            .pointerInput(Unit) {
+                awaitEachGesture {
+                    awaitFirstDown()
+                    do {
+
+                        isInGesture = true
+
+                        val event = awaitPointerEvent()
+                        scale *= event.calculateZoom()
+                        if (scale > MAGNIFICATION_BASELINE) {
+                            scrollState?.run {
+                                coroutineScope.launch {
+                                    setScrolling(false)
+                                }
+                            }
+
+                            onZoomModeChanged?.invoke(true)
+
+                            val pan = event.calculatePan()
+                            offsetX += pan.x
+                            offsetY += pan.y
+
+                            rotation += event.calculateRotation()
+
+                            scrollState?.run {
+                                coroutineScope.launch {
+                                    setScrolling(true)
+                                }
+                            }
+                        } else if (!snapBack) {
+                            // for the no snap back use case, the image should shift back into its container when it gets close enough to the original position
+                            onZoomModeChanged?.invoke(false)
+                            scale = MAGNIFICATION_BASELINE
+                            offsetX = OFFSET_X_BASELINE
+                            offsetY = OFFSET_Y_BASELINE
+                            rotation = ROTATION_BASELINE
+                        }
+                    } while (event.changes.any { it.pressed })
+
+                    // Gesture complete actions
+                    if (snapBack) {
+                        onZoomModeChanged?.invoke(false)
+
+                        isInGesture = false
+
+                        scale = MAGNIFICATION_BASELINE
+                        offsetX = OFFSET_X_BASELINE
+                        offsetY = OFFSET_Y_BASELINE
+                        rotation = ROTATION_BASELINE
+                    }
+                }
+            }
+    ) {
+
+        fun GraphicsLayerScope.manipulateImage() {
+            if (!isInGesture && animateSnapBack) {
+                scaleX = snapBackScale
+                scaleY = snapBackScale
+                if (supportRotation) {
+                    rotationZ = snapBackRotation
+                }
+                translationX = snapBackOffsetX
+                translationY = snapBackOffsetY
+            } else {
+                scaleX = maxOf(MAGNIFICATION_BASELINE, minOf(magnificationScale, scale))
+                scaleY = maxOf(MAGNIFICATION_BASELINE, minOf(magnificationScale, scale))
+                if (supportRotation) {
+                    rotationZ = rotation
+                }
+                translationX = offsetX
+                translationY = offsetY
+            }
+        }
+
+        compose.invoke(modifier.graphicsLayer { manipulateImage() })
+    }
+}
+
+suspend fun ScrollableState.setScrolling(value: Boolean) {
+    scroll(scrollPriority = MutatePriority.PreventUserInput) {
+        when (value) {
+            true -> Unit
+            else -> awaitCancellation()
+        }
+    }
+}
+
+@Immutable
+object ZoomableImageDimens {
+    internal const val OFFSET_X_BASELINE = 1f
+    internal const val OFFSET_Y_BASELINE = 1f
+    internal const val MAGNIFICATION_BASELINE = 1f
+    internal const val MAGNIFICATION_SCALE_DEFAULT = 2f
+    internal const val ROTATION_BASELINE = 0f
+    internal const val MAGNIFICATION_THRESHOLD = 2f
+}
