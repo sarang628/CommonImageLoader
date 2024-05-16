@@ -4,10 +4,13 @@ import ZoomableImageDimens.MAGNIFICATION_THRESHOLD
 import ZoomableImageDimens.OFFSET_X_BASELINE
 import ZoomableImageDimens.OFFSET_Y_BASELINE
 import ZoomableImageDimens.ROTATION_BASELINE
+import android.util.Log
 import androidx.annotation.DrawableRes
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.MutatePriority
+import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.ScrollableState
 import androidx.compose.foundation.gestures.awaitEachGesture
@@ -17,6 +20,8 @@ import androidx.compose.foundation.gestures.calculateRotation
 import androidx.compose.foundation.gestures.calculateZoom
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
@@ -24,15 +29,23 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.GraphicsLayerScope
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.sryang.library.R
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.launch
+import kotlin.math.abs
 
 
 @Composable
@@ -44,6 +57,7 @@ fun ZoomableTorangAsyncImage(
     contentScale: ContentScale = ContentScale.Fit,
     @DrawableRes previewPlaceHolder: Int? = null,
 ) {
+
     ZoomableImage(modifier) { modifier ->
         TorangAsyncImage(
             model = model,
@@ -54,6 +68,7 @@ fun ZoomableTorangAsyncImage(
             progressSize = progressSize,
         )
     }
+
 }
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -98,6 +113,10 @@ fun ZoomableImage(
 
     Box(
         modifier = containerModifier
+            .background(Color.Blue)
+            .onSizeChanged {
+                Log.d("__sryang", "onSizeChanged: $it")
+            }
             .combinedClickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
@@ -117,6 +136,11 @@ fun ZoomableImage(
                 awaitEachGesture {
                     awaitFirstDown()
                     do {
+                        Log.d(
+                            "__sryang",
+                            "scaled size = ${size.height * scale} * ${size.width * scale}"
+                        )
+                        Log.d("__sryang", "offset = ($offsetX, $offsetY)")
 
                         isInGesture = true
 
@@ -132,8 +156,16 @@ fun ZoomableImage(
                             onZoomModeChanged?.invoke(true)
 
                             val pan = event.calculatePan()
-                            offsetX += pan.x
-                            offsetY += pan.y
+                            if (abs(offsetX + pan.x) < (
+                                        (size.width * if (scale > magnificationScale) magnificationScale else scale) // size.width * scale
+                                                - size.width // - size
+                                        ) / 2
+                            ) {
+                                offsetX += pan.x
+                            }
+
+                            if (abs(offsetY + pan.y) < 0)
+                                offsetY += pan.y
 
                             rotation += event.calculateRotation()
 
@@ -166,8 +198,14 @@ fun ZoomableImage(
                 }
             }
     ) {
-
         fun GraphicsLayerScope.manipulateImage() {
+
+            Log.d("__sryang", "size = $size")
+            Log.d("__sryang", "scaled size = ${size.height * scale} * ${size.width * scale}")
+            Log.d("__sryang", "scale = $scale")
+            Log.d("__sryang", "rotation = $rotation")
+
+
             if (!isInGesture && animateSnapBack) {
                 scaleX = snapBackScale
                 scaleY = snapBackScale
@@ -187,7 +225,8 @@ fun ZoomableImage(
             }
         }
 
-        compose.invoke(modifier.graphicsLayer { manipulateImage() })
+        compose.invoke(modifier
+            .graphicsLayer { manipulateImage() })
     }
 }
 
@@ -205,7 +244,32 @@ object ZoomableImageDimens {
     internal const val OFFSET_X_BASELINE = 1f
     internal const val OFFSET_Y_BASELINE = 1f
     internal const val MAGNIFICATION_BASELINE = 1f
-    internal const val MAGNIFICATION_SCALE_DEFAULT = 2f
+    internal const val MAGNIFICATION_SCALE_DEFAULT = 3f
     internal const val ROTATION_BASELINE = 0f
     internal const val MAGNIFICATION_THRESHOLD = 2f
+}
+
+
+@Preview
+@Composable
+fun ZoomableTorangAsyncImagePreview() {
+    Box(
+        modifier = Modifier
+            .background(Color.Gray)
+            .size(200.dp)
+    ) {
+        ZoomableTorangAsyncImage(
+            model = "https://artrkl.com/cdn/shop/articles/thecreationofadam-1690035964350_d2d6280f-ed1d-465e-ad42-0ea0bbbcefde.webp?v=1690563054&width=1100",
+            modifier = Modifier
+                .size(400.dp)
+                .align(Alignment.Center),
+            contentScale = ContentScale.Crop
+        )
+
+        Image(
+            modifier = Modifier.scale(2.0f),
+            painter = painterResource(id = com.sryang.library.R.drawable.loading_img),
+            contentDescription = ""
+        )
+    }
 }

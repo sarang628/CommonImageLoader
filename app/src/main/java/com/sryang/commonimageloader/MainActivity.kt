@@ -7,6 +7,8 @@ import ZoomableTorangAsyncImage
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -24,8 +26,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.sryang.commonimageloader.ui.theme.CommonImageLoaderTheme
@@ -62,16 +67,23 @@ class MainActivity : ComponentActivity() {
                         Button(onClick = { deleteCache(context) }) {
                             Text(text = "cache clear")
                         }
-                        Box(modifier = Modifier.fillMaxSize()) {
+                    }
+
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        Box(
+                            modifier = Modifier
+                                .background(Color.Gray)
+                                .align(Alignment.Center)
+                        ) {
                             ZoomableTorangAsyncImage(
                                 model = list[0],
                                 modifier = Modifier
-                                    .size(400.dp)
                                     .align(Alignment.Center),
                                 contentScale = ContentScale.Crop
                             )
                         }
                     }
+
                 }
             }
         }
