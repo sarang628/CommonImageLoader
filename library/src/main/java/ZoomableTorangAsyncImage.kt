@@ -18,6 +18,8 @@ import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.calculatePan
 import androidx.compose.foundation.gestures.calculateRotation
 import androidx.compose.foundation.gestures.calculateZoom
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -38,6 +40,8 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -82,8 +86,22 @@ fun ZoomableImage(
     scrollState: ScrollableState? = null,
     snapBack: Boolean = false,
     supportRotation: Boolean = false,
+    parentWidth: Float = 100f,
+    parentHeight: Float = 100f,
     compose: @Composable (Modifier) -> Unit,
 ) {
+    val context = LocalContext.current
+
+    val displayMetrics = context.resources.displayMetrics
+
+    //Width And Height Of Screen
+    val width = displayMetrics.widthPixels
+    val height = displayMetrics.heightPixels
+
+    //Device Density
+    val density = displayMetrics.density
+
+    Log.d("__sryang", "screen height = ${height}")
 
     val coroutineScope = rememberCoroutineScope()
 
@@ -91,6 +109,7 @@ fun ZoomableImage(
     var rotation by remember { mutableStateOf(ROTATION_BASELINE) }
     var offsetX by remember { mutableStateOf(OFFSET_X_BASELINE) }
     var offsetY by remember { mutableStateOf(OFFSET_Y_BASELINE) }
+    var isDrag by remember { mutableStateOf(false) }
 
     // for animating scale, rotation and translation back to its original state
     var isInGesture by remember { mutableStateOf(false) }
@@ -113,7 +132,6 @@ fun ZoomableImage(
 
     Box(
         modifier = containerModifier
-            .background(Color.Blue)
             .onSizeChanged {
                 Log.d("__sryang", "onSizeChanged: $it")
             }
@@ -122,26 +140,31 @@ fun ZoomableImage(
                 indication = null,
                 onClick = { },
                 onDoubleClick = {
-                    if (scale >= MAGNIFICATION_THRESHOLD) {
-                        onZoomModeChanged?.invoke(false)
-                        scale = MAGNIFICATION_BASELINE
-                        offsetX = OFFSET_X_BASELINE
-                        offsetY = OFFSET_Y_BASELINE
-                    } else {
-                        scale = magnificationScale
-                    }
+                    if (!isDrag)
+                        if (scale >= MAGNIFICATION_THRESHOLD) {
+                            onZoomModeChanged?.invoke(false)
+                            scale = MAGNIFICATION_BASELINE
+                            offsetX = OFFSET_X_BASELINE
+                            offsetY = OFFSET_Y_BASELINE
+                        } else {
+                            if (!isDrag)
+                                scale = magnificationScale
+                        }
                 },
             )
+            .pointerInput(Unit) {
+                detectHorizontalDragGestures(
+                    onDragStart = {
+                        isDrag = true
+                    }, onDragEnd = {
+                        isDrag = false
+                    }, onHorizontalDrag = { change, dragAmount -> }
+                )
+            }
             .pointerInput(Unit) {
                 awaitEachGesture {
                     awaitFirstDown()
                     do {
-                        Log.d(
-                            "__sryang",
-                            "scaled size = ${size.height * scale} * ${size.width * scale}"
-                        )
-                        Log.d("__sryang", "offset = ($offsetX, $offsetY)")
-
                         isInGesture = true
 
                         val event = awaitPointerEvent()
@@ -158,13 +181,17 @@ fun ZoomableImage(
                             val pan = event.calculatePan()
                             if (abs(offsetX + pan.x) < (
                                         (size.width * if (scale > magnificationScale) magnificationScale else scale) // size.width * scale
-                                                - size.width // - size
+                                                - width
                                         ) / 2
                             ) {
                                 offsetX += pan.x
                             }
 
-                            if (abs(offsetY + pan.y) < 0)
+                            if (abs(offsetY + pan.y) < (
+                                        (size.height * if (scale > magnificationScale) magnificationScale else scale) // size.width * scale
+                                                - height // - size
+                                        ) / 2
+                            )
                                 offsetY += pan.y
 
                             rotation += event.calculateRotation()
@@ -202,9 +229,7 @@ fun ZoomableImage(
 
             Log.d("__sryang", "size = $size")
             Log.d("__sryang", "scaled size = ${size.height * scale} * ${size.width * scale}")
-            Log.d("__sryang", "scale = $scale")
-            Log.d("__sryang", "rotation = $rotation")
-
+            Log.d("__sryang", "offsetY = $offsetY")
 
             if (!isInGesture && animateSnapBack) {
                 scaleX = snapBackScale
