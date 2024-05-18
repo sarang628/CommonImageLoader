@@ -27,6 +27,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -47,9 +48,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.sryang.library.R
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.abs
+import kotlin.math.max
+import kotlin.math.min
 
 
 @Composable
@@ -59,10 +65,11 @@ fun ZoomableTorangAsyncImage(
     progressSize: Dp = 50.dp,
     errorIconSize: Dp = 50.dp,
     contentScale: ContentScale = ContentScale.Fit,
+    onEdge: ((Boolean) -> Unit)? = null,
     @DrawableRes previewPlaceHolder: Int? = null,
 ) {
 
-    ZoomableImage(modifier) { modifier ->
+    ZoomableImage(modifier, onEdge = onEdge) { modifier ->
         TorangAsyncImage(
             model = model,
             modifier = modifier,
@@ -86,8 +93,7 @@ fun ZoomableImage(
     scrollState: ScrollableState? = null,
     snapBack: Boolean = false,
     supportRotation: Boolean = false,
-    parentWidth: Float = 100f,
-    parentHeight: Float = 100f,
+    onEdge: ((Boolean) -> Unit)? = null,
     compose: @Composable (Modifier) -> Unit,
 ) {
     val context = LocalContext.current
@@ -101,15 +107,18 @@ fun ZoomableImage(
     //Device Density
     val density = displayMetrics.density
 
-    Log.d("__sryang", "screen height = ${height}")
+    var lastOffsetX by remember { mutableFloatStateOf(0f) }
+    var lastOffsetY by remember { mutableFloatStateOf(0f) }
 
-    val coroutineScope = rememberCoroutineScope()
-
-    var scale by remember { mutableStateOf(MAGNIFICATION_BASELINE) }
-    var rotation by remember { mutableStateOf(ROTATION_BASELINE) }
-    var offsetX by remember { mutableStateOf(OFFSET_X_BASELINE) }
-    var offsetY by remember { mutableStateOf(OFFSET_Y_BASELINE) }
     var isDrag by remember { mutableStateOf(false) }
+
+    var job: Job? = null
+    var job1: Job? = null
+
+    var scale by remember { mutableFloatStateOf(MAGNIFICATION_BASELINE) }
+    var rotation by remember { mutableFloatStateOf(ROTATION_BASELINE) }
+    var offsetX by remember { mutableFloatStateOf(OFFSET_X_BASELINE) }
+    var offsetY by remember { mutableFloatStateOf(OFFSET_Y_BASELINE) }
 
     // for animating scale, rotation and translation back to its original state
     var isInGesture by remember { mutableStateOf(false) }
@@ -130,37 +139,30 @@ fun ZoomableImage(
         label = "LABEL_ZOOMABLE_IMG_SNAP_BACK_OFFSET_Y"
     )
 
+    val coroutineScope = rememberCoroutineScope()
+
+
     Box(
         modifier = containerModifier
-            .onSizeChanged {
-                Log.d("__sryang", "onSizeChanged: $it")
-            }
             .combinedClickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
-                onClick = { },
+                onClick = {
+                },
                 onDoubleClick = {
-                    if (!isDrag)
-                        if (scale >= MAGNIFICATION_THRESHOLD) {
-                            onZoomModeChanged?.invoke(false)
-                            scale = MAGNIFICATION_BASELINE
-                            offsetX = OFFSET_X_BASELINE
-                            offsetY = OFFSET_Y_BASELINE
-                        } else {
-                            if (!isDrag)
-                                scale = magnificationScale
-                        }
+                    if (isDrag)
+                        return@combinedClickable
+
+                    if (scale >= MAGNIFICATION_THRESHOLD) {
+                        onZoomModeChanged?.invoke(false)
+                        scale = MAGNIFICATION_BASELINE
+                        offsetX = OFFSET_X_BASELINE
+                        offsetY = OFFSET_Y_BASELINE
+                    } else {
+                        scale = magnificationScale
+                    }
                 },
             )
-            .pointerInput(Unit) {
-                detectHorizontalDragGestures(
-                    onDragStart = {
-                        isDrag = true
-                    }, onDragEnd = {
-                        isDrag = false
-                    }, onHorizontalDrag = { change, dragAmount -> }
-                )
-            }
             .pointerInput(Unit) {
                 awaitEachGesture {
                     awaitFirstDown()
@@ -178,21 +180,48 @@ fun ZoomableImage(
 
                             onZoomModeChanged?.invoke(true)
 
+                            val edgeOffset = (
+                                    (size.width * if (scale > magnificationScale) magnificationScale else scale) // size.width * scale
+                                            - width
+                                    ) / 2
+
                             val pan = event.calculatePan()
-                            if (abs(offsetX + pan.x) < (
-                                        (size.width * if (scale > magnificationScale) magnificationScale else scale) // size.width * scale
-                                                - width
-                                        ) / 2
-                            ) {
+                            if (abs(offsetX + pan.x) < edgeOffset) {
                                 offsetX += pan.x
+                                job?.cancel()
+                                job = coroutineScope.launch {
+                                    delay(300)
+                                    lastOffsetX = offsetX
+                                }
                             }
+
+                            if (max(lastOffsetX, offsetX) - min(
+                                    lastOffsetX,
+                                    offsetX
+                                ) > 50
+                            ) {
+                                if (!isDrag) {
+                                    isDrag = true
+                                }
+
+                                job1?.cancel()
+                                job1 = coroutineScope.launch {
+                                    delay(500)
+                                    isDrag = false
+                                }
+                            }
+
+                            onEdge?.invoke(
+                                !(abs(offsetX + pan.x) < (edgeOffset - 10))
+                            )
 
                             if (abs(offsetY + pan.y) < (
                                         (size.height * if (scale > magnificationScale) magnificationScale else scale) // size.width * scale
                                                 - height // - size
                                         ) / 2
-                            )
+                            ) {
                                 offsetY += pan.y
+                            }
 
                             rotation += event.calculateRotation()
 
@@ -226,11 +255,6 @@ fun ZoomableImage(
             }
     ) {
         fun GraphicsLayerScope.manipulateImage() {
-
-            Log.d("__sryang", "size = $size")
-            Log.d("__sryang", "scaled size = ${size.height * scale} * ${size.width * scale}")
-            Log.d("__sryang", "offsetY = $offsetY")
-
             if (!isInGesture && animateSnapBack) {
                 scaleX = snapBackScale
                 scaleY = snapBackScale

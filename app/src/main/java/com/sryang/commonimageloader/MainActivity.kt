@@ -5,8 +5,10 @@ import TorangAsyncImage1
 import ZoomableImage
 import ZoomableTorangAsyncImage
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -15,6 +17,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -23,6 +27,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -35,12 +40,16 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.sryang.commonimageloader.ui.theme.CommonImageLoaderTheme
 import deleteCache
+import kotlinx.coroutines.launch
+import setScrolling
 
 
 class MainActivity : ComponentActivity() {
+    @OptIn(ExperimentalFoundationApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
+            var userScrollEnabled by remember { mutableStateOf(true) }
             CommonImageLoaderTheme {
                 // A surface container using the 'background' color from the theme
                 Surface(
@@ -60,6 +69,9 @@ class MainActivity : ComponentActivity() {
                     )
                     val context = LocalContext.current
                     var position by remember { mutableStateOf(0) }
+                    val state = rememberPagerState {
+                        list.size
+                    }
                     Column {
                         Button(onClick = { position++ }) {
 
@@ -68,22 +80,26 @@ class MainActivity : ComponentActivity() {
                             Text(text = "cache clear")
                         }
                     }
-
-                    Box(modifier = Modifier.fillMaxSize()) {
-                        Box(
-                            modifier = Modifier
-                                .background(Color.Gray)
-                                .align(Alignment.Center)
-                        ) {
-                            ZoomableTorangAsyncImage(
-                                model = list[0],
+                    HorizontalPager(state = state, userScrollEnabled = userScrollEnabled) {
+                        Box(modifier = Modifier.fillMaxSize()) {
+                            Box(
                                 modifier = Modifier
-                                    .align(Alignment.Center),
-                                contentScale = ContentScale.Crop
-                            )
+                                    .background(Color.Gray)
+                                    .align(Alignment.Center)
+                            ) {
+                                ZoomableTorangAsyncImage(
+                                    model = list[it],
+                                    modifier = Modifier
+                                        .align(Alignment.Center),
+                                    contentScale = ContentScale.Crop,
+                                    onEdge = {
+                                        Log.d("__sryang", "onEdge: ${it}")
+                                        userScrollEnabled = it
+                                    }
+                                )
+                            }
                         }
                     }
-
                 }
             }
         }
