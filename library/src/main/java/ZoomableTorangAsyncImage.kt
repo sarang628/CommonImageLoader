@@ -15,6 +15,7 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.ScrollableState
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.calculateCentroidSize
 import androidx.compose.foundation.gestures.calculatePan
 import androidx.compose.foundation.gestures.calculateRotation
 import androidx.compose.foundation.gestures.calculateZoom
@@ -35,9 +36,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.GraphicsLayerScope
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.PointerInputScope
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
@@ -94,6 +97,7 @@ fun ZoomableImage(
     snapBack: Boolean = false,
     supportRotation: Boolean = false,
     onEdge: ((Boolean) -> Unit)? = null,
+    onSwipeDown: (() -> Unit)? = null,
     compose: @Composable (Modifier) -> Unit,
 ) {
     val context = LocalContext.current
@@ -119,6 +123,10 @@ fun ZoomableImage(
     var rotation by remember { mutableFloatStateOf(ROTATION_BASELINE) }
     var offsetX by remember { mutableFloatStateOf(OFFSET_X_BASELINE) }
     var offsetY by remember { mutableFloatStateOf(OFFSET_Y_BASELINE) }
+
+    var swipeDownX by remember { mutableFloatStateOf(0.0f) }
+    var swipeDownY by remember { mutableFloatStateOf(0.0f) }
+
 
     // for animating scale, rotation and translation back to its original state
     var isInGesture by remember { mutableStateOf(false) }
@@ -170,6 +178,7 @@ fun ZoomableImage(
                         isInGesture = true
 
                         val event = awaitPointerEvent()
+
                         scale *= event.calculateZoom()
                         if (scale > MAGNIFICATION_BASELINE) {
                             scrollState?.run {
@@ -187,6 +196,7 @@ fun ZoomableImage(
 
                             val pan = event.calculatePan()
                             if (abs(offsetX + pan.x) < edgeOffset) {
+                                // 이미지가 확대 되어있을 때
                                 offsetX += pan.x
                                 job?.cancel()
                                 job = coroutineScope.launch {
@@ -231,14 +241,40 @@ fun ZoomableImage(
                                 }
                             }
                         } else if (!snapBack) {
+                            // 이미지가 원래 사이즈일 때
+                            val pan = event.calculatePan()
+
+                            swipeDownX += pan.x
+                            swipeDownY += pan.y
+
                             // for the no snap back use case, the image should shift back into its container when it gets close enough to the original position
                             onZoomModeChanged?.invoke(false)
                             scale = MAGNIFICATION_BASELINE
                             offsetX = OFFSET_X_BASELINE
                             offsetY = OFFSET_Y_BASELINE
                             rotation = ROTATION_BASELINE
+
+                            if (!event.changes.any { it.pressed }) {
+                                Log.d(
+                                    "__ZoomableImage",
+                                    "reset swipeDownX : ${swipeDownX}, swipeDownY : ${swipeDownY}"
+                                )
+
+                                if (abs(swipeDownX) < 50.0f && swipeDownY > 150.0f) {
+                                    Log.d(
+                                        "__ZoomableImage",
+                                        "swipeDown!!"
+                                    )
+                                    onSwipeDown?.invoke()
+                                }
+
+                                swipeDownX = 0.0f
+                                swipeDownY = 0.0f
+                            }
+
                         }
                     } while (event.changes.any { it.pressed })
+
 
                     // Gesture complete actions
                     if (snapBack) {
