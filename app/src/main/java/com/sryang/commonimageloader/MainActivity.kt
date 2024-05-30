@@ -93,8 +93,11 @@ class MainActivity : ComponentActivity() {
                                         .align(Alignment.Center),
                                     contentScale = ContentScale.Crop,
                                     onEdge = {
-                                        Log.d("__sryang", "onEdge: ${it}")
+                                        Log.d("__MainActivity", "onEdge: ${it}")
                                         userScrollEnabled = it
+                                    },
+                                    onSwipeDown = {
+                                        Log.d("__MainActivity", "onSwipeDown")
                                     }
                                 )
                             }

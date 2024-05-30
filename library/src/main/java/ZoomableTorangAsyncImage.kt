@@ -69,17 +69,18 @@ fun ZoomableTorangAsyncImage(
     errorIconSize: Dp = 50.dp,
     contentScale: ContentScale = ContentScale.Fit,
     onEdge: ((Boolean) -> Unit)? = null,
+    onSwipeDown: (() -> Unit)? = null,
     @DrawableRes previewPlaceHolder: Int? = null,
 ) {
 
-    ZoomableImage(modifier, onEdge = onEdge) { modifier ->
+    ZoomableImage(modifier, onEdge = onEdge, onSwipeDown = onSwipeDown) { modifier ->
         TorangAsyncImage(
             model = model,
             modifier = modifier,
             contentScale = contentScale,
             previewPlaceHolder = previewPlaceHolder,
             errorIconSize = errorIconSize,
-            progressSize = progressSize,
+            progressSize = progressSize
         )
     }
 
