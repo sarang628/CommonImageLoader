@@ -261,7 +261,7 @@ fun ZoomableImage(
                                     "reset swipeDownX : ${swipeDownX}, swipeDownY : ${swipeDownY}"
                                 )
 
-                                if (abs(swipeDownX) < 50.0f && swipeDownY > 150.0f) {
+                                if (abs(swipeDownX) < 80.0f && swipeDownY > 150.0f) {
                                     Log.d(
                                         "__ZoomableImage",
                                         "swipeDown!!"
