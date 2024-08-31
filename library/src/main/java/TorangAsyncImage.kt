@@ -2,6 +2,7 @@ import android.content.Context
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.runtime.Composable
@@ -37,7 +38,7 @@ fun TorangAsyncImage(
     progressSize: Dp = 50.dp,
     errorIconSize: Dp = 50.dp,
     contentScale: ContentScale = ContentScale.Fit,
-    @DrawableRes previewPlaceHolder: Int? = null
+    @DrawableRes previewPlaceHolder: Int? = null,
 ) {
     var state by remember { mutableStateOf(0) }
     val coroutine = rememberCoroutineScope()
@@ -61,6 +62,7 @@ fun TorangAsyncImage(
             )
         } else if (state == 0 || state == 1) {
             AsyncImage(
+                modifier = Modifier.fillMaxSize(),
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(model)
                     .build(),
