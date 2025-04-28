@@ -1,4 +1,5 @@
 import android.content.Context
+import android.util.Log
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
@@ -38,8 +39,10 @@ fun TorangAsyncImage(
     progressSize: Dp = 50.dp,
     errorIconSize: Dp = 50.dp,
     contentScale: ContentScale = ContentScale.Fit,
+    contentDescription : String = "",
     @DrawableRes previewPlaceHolder: Int? = null,
 ) {
+    val tag = "__TorangAsyncImage"
     var state by remember { mutableStateOf(0) }
     val coroutine = rememberCoroutineScope()
 
@@ -55,7 +58,7 @@ fun TorangAsyncImage(
             Image(
                 painter =
                 painterResource(id = previewPlaceHolder ?: R.drawable.ic_loading),
-                contentDescription = "",
+                contentDescription = contentDescription,
                 modifier = Modifier
                     .align(Alignment.Center)
                     .size(progressSize)
@@ -79,25 +82,21 @@ fun TorangAsyncImage(
                     }
                 },
                 contentScale = contentScale,
-                contentDescription = ""
+                contentDescription = contentDescription
             )
         } else if (state == 2) {
+            Log.e(tag, "failed load image : $model")
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(R.drawable.ic_connection_error)
                     .crossfade(true)
                     .build(),
-                contentDescription = "",
+                contentDescription = contentDescription,
                 modifier = Modifier
                     .size(errorIconSize)
                     .align(Alignment.Center)
             )
         }
-
-        /*AnimatedVisibility(
-            visible = true,
-            modifier.fillMaxSize()
-        ) {*/
 
         if (state == 0) {
             CircularProgressIndicator(

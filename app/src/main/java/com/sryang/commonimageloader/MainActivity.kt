@@ -1,7 +1,6 @@
 package com.sryang.commonimageloader
 
 import TorangAsyncImage
-import TorangAsyncImage1
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -49,6 +48,7 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     val list = listOf(
+                        "http://sarang628.iptime.org:89/review_images/1/233/2024-08-30/09_40_00_3391.jpg",
                         "http://sarang628.iptime.org:89/review_images/1/233/2024-08-30/09_40_00_339.jpg",
                         "https://artrkl.com/cdn/shop/articles/thecreationofadam-1690035964350_d2d6280f-ed1d-465e-ad42-0ea0bbbcefde.webp?v=1690563054&width=1100",
                         "https://media.cnn.com/api/v1/images/stellar/prod/190430171751-mona-lisa.jpg?q=w_2000,c_fill",
@@ -135,28 +135,13 @@ fun ListTest() {
     Row {
         LazyColumn {
             items(10000) {
-                TorangAsyncImage1(
-                    model = "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Instagram_icon.png/600px-Instagram_icon.png",
-                    modifier = Modifier.size(100.dp)
-                )
-            }
-        }
-        LazyColumn {
-            items(10000) {
                 TorangAsyncImage(
                     model = "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Instagram_icon.png/600px-Instagram_icon.png",
                     modifier = Modifier.size(100.dp)
                 )
             }
         }
-        LazyColumn {
-            items(10000) {
-                TorangAsyncImage1(
-                    model = "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Instagram_icon.png/600px-Instagram_icon.png",
-                    modifier = Modifier.size(100.dp)
-                )
-            }
-        }
+
     }
 
 }
