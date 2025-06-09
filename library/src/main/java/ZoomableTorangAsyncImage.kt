@@ -64,7 +64,7 @@ import kotlin.math.min
 @Composable
 fun ZoomableTorangAsyncImage(
     model: Any?,
-    modifier: Modifier,
+    modifier: Modifier = Modifier,
     progressSize: Dp = 50.dp,
     errorIconSize: Dp = 50.dp,
     contentScale: ContentScale = ContentScale.Fit,
