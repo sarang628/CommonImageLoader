@@ -1,0 +1,6 @@
+[submodule "app/src/main/java/com/sryang/commonimageloader/di/image"]
+	path = app/src/main/java/com/sryang/commonimageloader/di/image
+	url = https://github.com/sarang628/image.git
+[submodule "app/src/main/java/com/sryang/commonimageloader/di/pinchzoom"]
+	path = app/src/main/java/com/sryang/commonimageloader/di/pinchzoom
+	url = https://github.com/sarang628/pinchzoom
