@@ -33,10 +33,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.sarang.torang.di.image.ImageLoadData
-import com.sarang.torang.di.image.ProvideZoomableTorangAsyncImage
 import com.sarang.torang.di.pinchzoom.PinchZoomImageBox
 import com.sarang.torang.di.pinchzoom.isZooming
-import com.sarang.torang.di.pinchzoom.rememberPichZoomState
 import com.sryang.commonimageloader.ui.theme.CommonImageLoaderTheme
 import coil.compose.AsyncImage
 
@@ -111,7 +109,7 @@ fun ZoomableTorangAsyncImageTest() {
 
 @Composable
 fun PinchZoomImageBoxTest() {
-    var zoomState = rememberPichZoomState()
+    /*var zoomState = rememberPichZoomState()
 
     LaunchedEffect(zoomState) {
         snapshotFlow { zoomState.value.isZooming }.collect {
@@ -134,5 +132,5 @@ fun PinchZoomImageBoxTest() {
                 }
             }
         }
-    }
+    }*/
 }
