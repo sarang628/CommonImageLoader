@@ -39,3 +39,8 @@ git submodule add (or git clone) https://github.com/sarang628/pinchzoom.git
 ```
 implementation("com.github.sarang628:CommonImageLoader:1999de5a48") 
 ```
+
+
+## Tech Stack
+- Jetpack Compose
+- Coil

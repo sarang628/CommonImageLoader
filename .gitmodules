@@ -16,3 +16,6 @@
 [submodule "app/src/main/java/com/sarang/torang/di/torang_network_di"]
 	path = app/src/main/java/com/sarang/torang/di/torang_network_di
 	url = https://github.com/sarang628/torang_network_di.git
+[submodule "documents"]
+	path = documents
+	url = https://github.com/sarang628/documents.git
