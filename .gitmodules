@@ -1,6 +1,27 @@
-[submodule "app/src/main/java/com/sryang/commonimageloader/di/image"]
-	path = app/src/main/java/com/sryang/commonimageloader/di/image
+[submodule "gradle/TorangToml"]
+	path = gradle/TorangToml
+	url = https://github.com/sarang628/TorangToml.git
+[submodule "app/src/main/java/com/sryang/commonimageloader/di/repository"]
+	path = app/src/main/java/com/sryang/commonimageloader/di/repository
+	url = https://github.com/sarang628/repository.git
+[submodule "app/src/main/java/com/sryang/commonimageloader/di/torang_network_di"]
+	path = app/src/main/java/com/sryang/commonimageloader/di/torang_network_di
+	url = https://github.com/sarang628/torang_network_di.git
+[submodule "app/src/main/java/com/sryang/commonimageloader/di/torang_database_di"]
+	path = app/src/main/java/com/sryang/commonimageloader/di/torang_database_di
+	url = https://github.com/sarang628/torang_database_di.git
+[submodule "app/src/main/java/com/sarang/torang/di/image"]
+	path = app/src/main/java/com/sarang/torang/di/image
 	url = https://github.com/sarang628/image.git
-[submodule "app/src/main/java/com/sryang/commonimageloader/di/pinchzoom"]
-	path = app/src/main/java/com/sryang/commonimageloader/di/pinchzoom
-	url = https://github.com/sarang628/pinchzoom
+[submodule "app/src/main/java/com/sarang/torang/di/pinchzoom"]
+	path = app/src/main/java/com/sarang/torang/di/pinchzoom
+	url = https://github.com/sarang628/pinchzoom.git
+[submodule "app/src/main/java/com/sarang/torang/di/repository"]
+	path = app/src/main/java/com/sarang/torang/di/repository
+	url = https://github.com/sarang628/repository.git
+[submodule "app/src/main/java/com/sarang/torang/di/torang_database_di"]
+	path = app/src/main/java/com/sarang/torang/di/torang_database_di
+	url = https://github.com/sarang628/torang_database_di.git
+[submodule "app/src/main/java/com/sarang/torang/di/torang_network_di"]
+	path = app/src/main/java/com/sarang/torang/di/torang_network_di
+	url = https://github.com/sarang628/torang_network_di.git

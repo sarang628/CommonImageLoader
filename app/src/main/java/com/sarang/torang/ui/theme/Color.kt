@@ -1,4 +1,4 @@
-package com.sryang.commonimageloader.ui.theme
+package com.sarang.torang.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
